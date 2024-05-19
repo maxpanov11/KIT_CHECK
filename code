@@ -1,0 +1,500 @@
+import telebot
+from telebot import types
+import feedparser
+import ssl
+from translate import Translator
+import schedule
+import time
+import threading
+import requests
+import time
+import logging
+
+def parcing(india, china, turkey):
+    links_india = ['https://www.livemint.com/rss/companies',
+'https://www.livemint.com/rss/money',
+'https://www.livemint.com/rss/news',
+'https://www.livemint.com/rss/markets',
+'https://bfsi.economictimes.indiatimes.com/rss/banking',
+'https://cfo.economictimes.indiatimes.com/rss/economy',
+'https://cfo.economictimes.indiatimes.com/rss/recentstories',
+'https://cfo.economictimes.indiatimes.com/rss/topstories',
+'https://cfo.economictimes.indiatimes.com/rss/corporate-finance',
+'https://www.business-standard.com/rss/industry/banking-21703.rss',
+'https://www.business-standard.com/rss/home_page_top_stories.rss',
+'https://www.business-standard.com/rss/india-news-216.rss',
+'https://www.business-standard.com/rss/latest.rss',
+'https://www.business-standard.com/rss/companies-101.rss',
+'https://www.hindustantimes.com/feeds/rss/infographic/companies/rssfeed.xml',
+'https://www.hindustantimes.com/feeds/rss/infographic/economy/rssfeed.xml',
+'https://www.thehindubusinessline.com/companies/feeder/default.rss',
+'https://www.thehindubusinessline.com/money-and-banking/feeder/default.rss',
+'https://www.thehindu.com/news/national/feeder/default.rss',
+'https://www.thehindu.com/business/Economy/feeder/default.rss',
+'https://www.thehindu.com/business/markets/feeder/default.rss',
+'https://www.thehindu.com/business/feeder/default.rss',
+'https://www.thehindu.com/business/Industry/feeder/default.rss']
+    links_china = ['https://www.scmp.com/rss/91/feed',
+'https://www.scmp.com/rss/318421/feed', 
+'https://www.scmp.com/rss/4/feed',
+'https://www.scmp.com/rss/318200/feed',
+'https://www.businesstimes.com.sg/rss/banking-finance',
+'https://www.businesstimes.com.sg/rss/economy-policy',
+'https://www.finam.ru/international/advanced/rsspoint/',
+'https://www.theasianbanker.com/rss/analysis-commentaries-feed.xml']
+
+    exact_banks_china = ['https://rss.app/feeds/mXWnYdbaTyz0vFGY.xml',
+'https://rss.app/feeds/1PMA5v6JPlHOg5Tw.xml',
+'https://rss.app/feeds/8pXr35AAYsP0TRdp.xml',
+'https://rss.app/feeds/cIyy7fAYjvN0wT3A.xml',
+'https://rss.app/feeds/fI8cCG7Z7H2lmZXR.xml',
+'https://rss.app/feeds/ovS47MIX3jHmioum.xml',
+'https://rss.app/feeds/ugvEAl4MnelsMrc9.xml',
+'https://rss.app/feeds/FSt3KzvtXUY3kVcY.xml',
+'https://rss.app/feeds/g1GRZ3nUb6RccdYg.xml',
+'https://rss.app/feeds/7bGmvISc97JCnJxr.xml',
+'http://finance.yahoo.com/rss/headline?s=0939.HK',
+'http://finance.yahoo.com/rss/headline?s=1398.HK',
+'http://finance.yahoo.com/rss/headline?s=3988.HK',
+'http://finance.yahoo.com/rss/headline?s=1288.HK',
+'http://finance.yahoo.com/rss/headline?s=3328.HK',
+'http://finance.yahoo.com/rss/headline?s=3968.HK',
+'https://seekingalpha.com/api/sa/combined/CICHY.xml',
+'https://seekingalpha.com/api/sa/combined/IDCBY.xml',
+'https://seekingalpha.com/api/sa/combined/BACHF.xml',
+'https://seekingalpha.com/api/sa/combined/ACGBY.xml',
+'https://seekingalpha.com/api/sa/combined/BCMXY.xml',
+'https://seekingalpha.com/api/sa/combined/CIHKY.xml']
+    links_turkey = ['https://www.dailysabah.com/rssFeed/13/23',
+'https://www.dailysabah.com/rssFeed/13/21',
+'https://www.reutersagency.com/feed/?best-sectors=economy&post_type=best',
+'https://www.yenisafak.com/rss?xml=', ##на туркцком
+'https://www.sozcu.com.tr/feeds-rss-category-ekonomi', ##на турецом
+'https://www.aa.com.tr/ru/rss/default?cat=live', 
+'https://www.takvim.com.tr/rss/ekonomi', ##на турецко
+'https://www.milliyet.com.tr/rss/rssNew/dunyaRss.xml', #на турецком
+'http://www.hurriyet.com.tr/rss/ekonomi',
+'https://www.ft.com/turkey?format=rss',
+'https://www.isbank.com.tr/rss/news',
+'https://feeds.bloomberg.com/markets/news.rss']
+    news = []
+    finalnews_india = [[] for i in range(6)]
+    num = -1
+    for link in links_india:
+        num += 1
+        if hasattr(ssl, '_create_unverified_context'):
+            ssl._create_default_https_context = ssl._create_unverified_context
+        if 'business-standard' in link:
+            headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36',
+    'From': 'maxpanov@gmail.com'}
+            try:
+                response = requests.get(link, headers=headers, timeout=10).text
+                response = feedparser.parse(response)
+            except:
+                response = ''
+        else:
+            try:
+                response = feedparser.parse(link)
+            except:
+                response = ''
+        if response != '':      
+            for info in response['entries']:
+                link = info['links']
+                details = info['summary']
+                timee = info['published_parsed']
+                if num <= 3:
+                    name = 'Mint'
+                    num2 = 0
+                elif num <= 8:
+                    name = 'The Economic Times'
+                    num2 = 1
+                elif num <= 13:
+                    name = 'Business Standard'
+                    num2 = 2
+                elif num <= 15:
+                    name = 'Hindustan Times'
+                    num2 = 3
+                elif num <= 17:
+                    name = 'The Hindu Business Line'
+                    num2 = 4
+                else:
+                    name = 'The Hindu'
+                    num2 = 5
+                news.append([info['title'],link[0]['href'], details, name, num2, timee])
+    translator= Translator(to_lang="ru", email='maxspanov@gmail.com')
+    banks = ['ICICI', 'HDFC', 'UCO', 'SBI', 'Kotak Mahindra', 'Axis bank']  
+    for title in news:
+        for i in range(len(banks)):
+            if banks[i].lower() in title[0].lower() or banks[i].lower() in title[2].lower():
+                check = 0
+                for s in finalnews_india[i]:
+                    if title[1] == s[1] or title[0] == s[2]:
+                        check = 1
+                        break
+                if check == 0:
+                    translation = translator.translate(title[0])
+                    if 'MYMEMORY WARNING' in translation:
+                        translation = title[0]
+                    finalnews_india[i].append([translation, title[1], title[0], title[3], title[4], title[5]])
+    for i in range(6):
+        finalnews_india[i] = sorted(finalnews_india[i], key = lambda x: x[5], reverse=True)
+    banks_i = ['ICICI Bank', 'HDFC Bank', 'UCO Bank', 'State Bank of India', 'Kotak Mahindra Bank', 'Axis bank']
+    for i in range(6):
+        mess = ''
+        check = 0
+        nums = [0]*6
+        for text in finalnews_india[i]:
+            if nums[text[4]] <= 2 or (text[5][0] == 2024 and text[5][1] >= 3):
+                nums[text[4]] += 1
+                mess += '<em>' + time.strftime('%d.%m.%Y', text[5]) + '</em>' + '\n'
+                mess += text[0] + '\nИсточник: '
+                mess += f"<a href=\"{text[1]}\">{text[3]}</a>\n\n"
+                if len(mess) > 3000:
+                    if check == 0:
+                        mess = f'<b>Последние новости по {banks_i[i]}:</b>\n\n{mess}'
+                        check = 1
+                    india[i].append(mess)
+                    mess = ''
+        if mess == '' and check == 0:
+            mess = 'К сожалению, у меня не получилось найти свежие новости по данной компании'
+        elif check == 0:
+            mess = f'<b>Последние новости по {banks_i[i]}:</b>\n\n{mess}'
+        if mess != '':
+            india[i].append(mess)
+    news = []
+    num = -1
+    for link in links_china:
+        num += 1
+        if num <= 3:
+            name = 'South China Morning Post'
+            num2 = 0
+        elif num <= 5:
+            name = 'The Business Times'
+            num2 = 1
+        elif num == 6:
+            name = 'Финам'
+            num2 = 2
+        else:
+            name = 'The Asian Banker'
+            num2 = 3
+        if hasattr(ssl, '_create_unverified_context'):
+            ssl._create_default_https_context = ssl._create_unverified_context
+        try:
+            response = feedparser.parse(link)
+        except:
+            response = ''
+        if response != '':
+            for info in response['entries']:
+                link = info['links']
+                details = info['summary']
+                timee = info['published_parsed']
+                news.append([info['title'],link[0]['href'], details, name, num2, timee])
+    translator= Translator(to_lang="ru", email='maxspanov@gmail.com')
+    banks = [['China Construction Bank', 'CCB ', '中国建设银行', 'CICHY'], ['Industrial and Commercial Bank of China', 'ICBC', '中国工商银行', 'IDCBY'], ['Bank of China', 'BOC', '中国银行', 'BACHF'],
+             ['Agricultural Bank of China', 'AgBank', ' ABC ', '中国农业银行', 'ACGBY'], ['Bank of Communications', 'BoCom', 'BCMXY'], ['China Merchants Bank', 'CMB', 'CIHKY']]
+    finalnews_china = [[] for i in range(6)]
+    for title in news:
+        for i in range(len(banks)):
+            for bank in banks[i]:
+                if (bank.lower() in title[0].lower() or bank.lower() in title[2].lower()):
+                    check = 0
+                    for s in finalnews_china[i]:
+                        if title[1] == s[1] or title[0] == s[2]:
+                            check = 1
+                            break
+                    if check == 0:
+                        translation = translator.translate(title[0])
+                        if 'MYMEMORY WARNING' in translation:
+                            translation = title[0]
+                        finalnews_china[i].append([translation, title[1], title[0], title[3], title[4], title[5]])
+    num = -1
+    for link in exact_banks_china:
+        num += 1
+        if num <= 5:
+            name = 'South China Morning Post'
+            num2 = 4
+        elif num <= 9:
+            name = 'The Business Times'
+            num2 = 5
+        elif num <= 15:
+            name = 'Yahoo Finance'
+            num2 = 6
+        elif num <= 21:
+            name = 'Seeking Alpha'
+            num2 = 7
+        if hasattr(ssl, '_create_unverified_context'):
+            ssl._create_default_https_context = ssl._create_unverified_context
+        try:
+            response = feedparser.parse(link)
+        except:
+            response = dict()
+            response['entries'] = []
+        p = 0
+        for info in response['entries']:
+            p += 1
+            if name != 'The Business Times' or p != 1:
+                if num2 == 7:
+                    if 'MarketCurrent' in info['id']:
+                        url = info['id'][39:]
+                        link = f'https://seekingalpha.com/news/{url}'
+                    else:
+                        url = info['id'][33:]
+                        link = f'https://seekingalpha.com/article/{url}'
+                else:
+                    link = info['links'][0]['href']
+                translation = translator.translate(info['title'])
+                timee = info['published_parsed']
+                if 'MYMEMORY WARNING' in translation:
+                    translation = info['title']
+                if num > 9:
+                    finalnews_china[(num-10)%6].append([translation,link, '', name, num2, timee])
+                else:
+                    finalnews_china[num%6].append([translation,link, '', name, num2, timee])
+    for i in range(6):
+        finalnews_china[i] = sorted(finalnews_china[i], key = lambda x: x[5], reverse=True)
+    banks_c = ['China Construction Bank', 'Industrial and Commercial Bank of China', 'Bank of China', 'Agricultural Bank of China', 'Bank of Communications', 'China Merchants Bank']
+    for i in range(6):
+        mess = ''
+        nums = [0]*8
+        check = 0
+        for text in finalnews_china[i]:
+            if nums[text[4]] <= 2 or (text[5][0] == 2024 and text[5][1] >= 3):
+                nums[text[4]] += 1
+                mess += '<em>' + time.strftime('%d.%m.%Y', text[5]) + '</em>' + '\n'
+                mess += text[0] + '\nИсточник: '
+                mess += f"<a href=\"{text[1]}\">{text[3]}</a>\n\n"
+                if len(mess) > 3000:
+                    if check == 0:
+                        mess = f'<b>Последние новости по {banks_c[i]}:</b>\n\n{mess}'
+                        check = 1
+                    china[i].append(mess)
+                    mess = ''
+        if mess == '' and check == 0:
+            mess = 'К сожалению, у меня не получилось найти свежие новости по данной компании'
+        elif check == 0:
+            mess = f'<b>Последние новости по {banks_c[i]}:</b>\n\n{mess}'
+        if mess != '':
+            china[i].append(mess)
+    news = []
+    finalnews_turkey = [[] for i in range(4)]
+    num = -1
+    for link in links_turkey:
+        num += 1
+        if hasattr(ssl, '_create_unverified_context'):
+            ssl._create_default_https_context = ssl._create_unverified_context
+        try:
+            response = feedparser.parse(link)
+        except:
+            response = ''
+        if response != '':      
+            for info in response['entries']:
+                link = info['links']
+                details = info['summary']
+                timee = info['published_parsed']
+                if num <= 1:
+                    name = 'Daily Sabah'
+                    num2 = 0
+                elif num <= 2:
+                    name = 'Reuters'
+                    num2 = 1
+                elif num <= 3:
+                    name = 'Yeni Safak'
+                    num2 = 2
+                elif num <= 4:
+                    name = 'Sozcu'
+                    num2 = 3
+                elif num <= 5:
+                    name = 'AA'
+                    num2 = 4
+                elif num <= 6:
+                    name = 'Takvim'
+                    num2 = 5
+                elif num <= 7:
+                    name = 'Milliyet'
+                    num2 = 6
+                elif num <= 8:
+                    name = 'Hurriyet'
+                    num2 = 7
+                elif num <= 9:
+                    name = 'Financial Times'
+                    num2 = 8
+                elif num <= 10:
+                    name = 'Türkiye İş Bankası'
+                    num2 = 9
+                else:
+                    name = 'Bloomberg'
+                    num2 = 10
+                news.append([info['title'],link[0]['href'], details, name, num2, timee])
+    translator= Translator(to_lang="ru", email='maxspanov@gmail.com')
+    banks = [['emlak katilim', 'Emlak Katılım', 'Emlak Kredi'], ['Akbank'], ['Isbank', 'Türkiye İş Bankası', 'İşbank'], ['Halkbank', 'Halk']]
+    for title in news:
+        for i in range(len(banks)):
+            for bank in banks[i]:
+                if bank.lower() in title[0].lower() or bank.lower() in title[2].lower():
+                    check = 0
+                    for s in finalnews_turkey[i]:
+                        if title[1] == s[1] or title[0] == s[2]:
+                            check = 1
+                            break
+                    if check == 0:
+                        translation = translator.translate(title[0])
+                        if 'MYMEMORY WARNING' in translation:
+                            translation = title[0]
+                        finalnews_turkey[i].append([translation, title[1], title[0], title[3], title[4], title[5]])
+
+    for i in range(4):
+        finalnews_turkey[i] = sorted(finalnews_turkey[i], key = lambda x: x[5], reverse=True)
+    banks_t = ['Emlak Katilim', 'Akbank', 'Isbank', 'Halkbank']  
+    for i in range(4):
+        mess = ''
+        check = 0
+        nums = [0]*11
+        for text in finalnews_turkey[i]:
+            print(text, 1)
+            if nums[text[4]] <= 2 or (text[5][0] == 2024 and text[5][1] >= 3):
+                nums[text[4]] += 1
+                mess += '<em>' + time.strftime('%d.%m.%Y', text[5]) + '</em>' + '\n'
+                mess += text[0] + '\nИсточник: '
+                mess += f"<a href=\"{text[1]}\">{text[3]}</a>\n\n"
+                if len(mess) > 3000:
+                    if check == 0:
+                        mess = f'<b>Последние новости по {banks_t[i]}:</b>\n\n{mess}'
+                        check = 1
+                    turkey[i].append(mess)
+                    mess = ''
+        if mess == '' and check == 0:
+            mess = 'К сожалению, у меня не получилось найти свежие новости по данной компании'
+        elif check == 0:
+            mess = f'<b>Последние новости по {banks_t[i]}:</b>\n\n{mess}'
+        if mess != '':
+            turkey[i].append(mess)
+
+def timee():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+india = [[] for i in range(6)]
+china = [[] for i in range(6)]
+turkey = [[] for i in range(4)]
+parcing(india, china, turkey)
+schedule.every(10).hours.do(parcing, india = [[] for i in range(6)], china = [[] for i in range(6)], turkey = [[] for i in range(4)])
+threading.Thread(target=timee).start()
+
+bot = telebot.TeleBot()
+
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    markup = types.ReplyKeyboardMarkup()
+    btn1 = types.KeyboardButton('Китай')
+    btn2 = types.KeyboardButton('Индия')
+    btn3 = types.KeyboardButton('Турция')
+    markup.row(btn1)
+    markup.row(btn2)
+    markup.row(btn3)
+    try:
+        bot.send_message(message.chat.id, f'Здравствуйте, {message.from_user.first_name}! Какая страна вас интересует?', reply_markup=markup)
+    except:
+        pass
+
+@bot.message_handler(content_types=['text'])
+def choose_country(message):
+    if message.text.lower() == 'индия' or message.text.lower() == 'india':
+        try:
+            bot.send_message(message.chat.id, 'Выберите компанию из списка, по которой хотите получить информацию')
+        except:
+            pass
+        markup = types.InlineKeyboardMarkup()
+        btn1 = (types.InlineKeyboardButton('1', callback_data='i0'))
+        btn2 = (types.InlineKeyboardButton('2', callback_data='i1'))
+        btn3 = (types.InlineKeyboardButton('3', callback_data='i2'))
+        btn4 = (types.InlineKeyboardButton('4', callback_data='i3'))
+        btn5 = (types.InlineKeyboardButton('5', callback_data='i4'))
+        btn6 = (types.InlineKeyboardButton('6', callback_data='i5'))
+        markup.row(btn1, btn2, btn3, btn4, btn5, btn6)
+        try:
+            bot.send_message(message.chat.id, '1) ICICI Bank\n2) HDFC Bank\n3) UCO Bank\n4) State Bank of India\n5) Kotak Mahindra Bank\n6) Axis Bank', reply_markup=markup)
+        except:
+            pass
+    elif message.text.lower() == 'китай' or message.text.lower() == 'china':
+        try:
+            bot.send_message(message.chat.id, 'Выберите компанию из списка, по которой хотите получить информацию')
+        except:
+            pass
+        markup = types.InlineKeyboardMarkup()
+        btn1 = (types.InlineKeyboardButton('1', callback_data='c0'))
+        btn2 = (types.InlineKeyboardButton('2', callback_data='c1'))
+        btn3 = (types.InlineKeyboardButton('3', callback_data='c2'))
+        btn4 = (types.InlineKeyboardButton('4', callback_data='c3'))
+        btn5 = (types.InlineKeyboardButton('5', callback_data='c4'))
+        btn6 = (types.InlineKeyboardButton('6', callback_data='c5'))
+        markup.row(btn1, btn2, btn3, btn4, btn5, btn6)
+        try:
+            bot.send_message(message.chat.id, '1) China Construction Bank\n2) Industrial and Commercial Bank of China\n3) Bank of China\n4) Agricultural Bank of China\n5) Bank of Communications\n6) China Merchants Bank', reply_markup=markup)
+        except:
+            pass
+    elif message.text.lower() == 'турция' or message.text.lower() == 'turkey':
+        try:
+            bot.send_message(message.chat.id, 'Выберите компанию из списка, по которой хотите получить информацию')
+        except:
+            pass
+        markup = types.InlineKeyboardMarkup()
+        btn1 = (types.InlineKeyboardButton('1', callback_data='t0'))
+        btn2 = (types.InlineKeyboardButton('2', callback_data='t1'))
+        btn3 = (types.InlineKeyboardButton('3', callback_data='t2'))
+        btn4 = (types.InlineKeyboardButton('4', callback_data='t3'))
+        markup.row(btn1, btn2, btn3, btn4)
+        try:
+            bot.send_message(message.chat.id, '1) Emlak Katılım\n2) Akbank\n3) Isbank\n4) Halkbank', reply_markup=markup)
+        except:
+            pass
+    elif message.text.lower() == 'помощь' or message.text.lower() ==  '/help':
+        try:
+            bot.send_message(message.chat.id, 'Для начала работы нужно выбрать страну, компании из которой вас интересуют. Это можно сделать в всплывающем меню внизу экрана, либо набрать название страны текстом. Далее выберите номер интересующей вас компании под сообщением со списком компаний.')
+        except:
+            pass
+    else:
+        try:
+            bot.send_message(message.chat.id, 'К сожалению, я не знаю такой команды. \nЧтобы узнать, что я могу, напишите: \n/help')
+        except:
+            pass
+@bot.callback_query_handler(func=lambda callback: True)
+def send_info(callback):
+    try:
+        bot.delete_message(callback.message.chat.id, callback.message.message_id-1)
+        bot.delete_message(callback.message.chat.id, callback.message.message_id)
+    except:
+        pass
+    mess = ''
+    lim = 0
+    if callback.data[0] == 'i':
+        for s in india[int(callback.data[1:])]:
+            try:
+                bot.send_message(callback.message.chat.id, s, parse_mode="HTML")
+            except:
+                pass
+    elif callback.data[0] == 'c':
+        for s in china[int(callback.data[1:])]:
+            try:
+                bot.send_message(callback.message.chat.id, s, parse_mode="HTML")
+            except:
+                pass
+    elif callback.data[0] == 't':
+        for s in turkey[int(callback.data[1:])]:
+            try:
+                bot.send_message(callback.message.chat.id, s, parse_mode="HTML")
+            except:
+                pass
+
+     
+while True:
+    try:
+      bot.polling(none_stop=True)
+    except Exception as err:
+        logging.error(err)
+        time.sleep(5)
+        print("Internet error!")
+
